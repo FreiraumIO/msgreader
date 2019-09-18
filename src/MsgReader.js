@@ -324,7 +324,6 @@ var extractorFieldValue = {
       },
       'binary': function extractBatBinary(ds, msgData, blockStartOffset, bigBlockOffset, blockSize) {
         ds.seek(blockStartOffset + bigBlockOffset);
-        var toReadLength = Math.min(Math.min(msgData.bigBlockSize - bigBlockOffset, blockSize), CONST.MSG.SMALL_BLOCK_SIZE);
         return ds.readUint8Array(blockSize);
       }
     }
