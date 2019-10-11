@@ -284,8 +284,13 @@ function fieldsDataDocument(ds, msgData, documentProperty, fields) {
   var fieldType = value.substring(4, 8);
 
   var fieldName = CONST.MSG.FIELD.NAME_MAPPING[fieldClass];
-
-  if (fieldName) {
+  // makes sure to ignore duplicates of the body
+  // that happen to be in binary
+  if (fieldName && fieldName === "body") { 
+    if (!fields[fieldName] || CONST.MSG.FIELD.TYPE_MAPPING[fieldType] !== "binary") {
+      fields[fieldName] = getFieldValue(ds, msgData, documentProperty, fieldType);
+    }
+  } else if (fieldName && fieldName !== "body") {
     fields[fieldName] = getFieldValue(ds, msgData, documentProperty, fieldType);
   }
   if (fieldClass == CONST.MSG.FIELD.CLASS_MAPPING.ATTACHMENT_DATA) {
