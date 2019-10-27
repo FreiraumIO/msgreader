@@ -14,8 +14,8 @@
       "@babel/preset-env"
     ]
   },
-  "author": "@datsteves (FreiraumIO)",
-  "repository": "github:bayoumymac/msgreader",
+  "author": "@datsteves",
+  "repository": "https://www.github.com/FreiraumIO/msgreader",
   "license": "ISC",
   "devDependencies": {
     "@babel/cli": "^7.0.0",
