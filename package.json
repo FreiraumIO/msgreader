@@ -15,7 +15,7 @@
     ]
   },
   "author": "@datsteves (FreiraumIO)",
-  "repository": "github:FreiraumIO/msgreader",
+  "repository": "github:bayoumymac/msgreader",
   "license": "ISC",
   "devDependencies": {
     "@babel/cli": "^7.0.0",
