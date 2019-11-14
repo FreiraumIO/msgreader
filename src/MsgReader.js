@@ -278,15 +278,24 @@ function fieldsDataDirInner(ds, msgData, dirProperty, fields) {
   }
 }
 
+function isAddPropertyValue(fieldName, fieldTypeMapped) {
+  return fieldName !== 'body' || fieldTypeMapped !== 'binary';
+}
+
 function fieldsDataDocument(ds, msgData, documentProperty, fields) {
   var value = documentProperty.name.substring(12).toLowerCase();
   var fieldClass = value.substring(0, 4);
   var fieldType = value.substring(4, 8);
 
   var fieldName = CONST.MSG.FIELD.NAME_MAPPING[fieldClass];
+  var fieldTypeMapped = CONST.MSG.FIELD.TYPE_MAPPING[fieldType];
 
   if (fieldName) {
-    fields[fieldName] = getFieldValue(ds, msgData, documentProperty, fieldType);
+	var fieldValue = getFieldValue(ds, msgData, documentProperty, fieldTypeMapped);
+	
+    if (isAddPropertyValue(fieldName, fieldTypeMapped)) {
+      fields[fieldName] = applyValueConverter(fieldName, fieldTypeMapped, fieldValue);
+    }
   }
   if (fieldClass == CONST.MSG.FIELD.CLASS_MAPPING.ATTACHMENT_DATA) {
 
@@ -294,6 +303,14 @@ function fieldsDataDocument(ds, msgData, documentProperty, fields) {
     fields['dataId'] = documentProperty.index;
     fields['contentLength'] = documentProperty.sizeBlock;
   }
+}
+
+// todo: html body test
+function applyValueConverter(fieldName, fieldTypeMapped, fieldValue) {
+  if (fieldTypeMapped === 'binary' && fieldName === 'bodyHTML') {
+    return convertUint8ArrayToString(fieldValue);
+  }
+  return fieldValue
 }
 
 function getFieldType(fieldProperty) {
@@ -387,17 +404,21 @@ function getChainByBlockSmall(ds, msgData, fieldProperty) {
   return blockChain;
 }
 
-function getFieldValue(ds, msgData, fieldProperty, type) {
+function getFieldValue(ds, msgData, fieldProperty, typeMapped) {
   var value = null;
 
   var valueExtractor =
     fieldProperty.sizeBlock < CONST.MSG.BIG_BLOCK_MIN_DOC_SIZE ? extractorFieldValue.sbat : extractorFieldValue.bat;
-  var dataTypeExtractor = valueExtractor.dataType[CONST.MSG.FIELD.TYPE_MAPPING[type]];
+  var dataTypeExtractor = valueExtractor.dataType[typeMapped];
 
   if (dataTypeExtractor) {
     value = valueExtractor.extractor(ds, msgData, fieldProperty, dataTypeExtractor);
   }
   return value;
+}
+
+function convertUint8ArrayToString(uint8ArraValue) {
+  return new TextDecoder("utf-8").decode(uint8ArraValue);
 }
 
 export default class MsgReader {
@@ -422,7 +443,8 @@ export default class MsgReader {
   getAttachment(attach) {
     var attachData = typeof attach === 'number' ? this.fileData.fieldsData.attachments[attach] : attach;
     var fieldProperty = this.fileData.propertyData[attachData.dataId];
-    var fieldData = getFieldValue(this.ds, this.fileData, fieldProperty, getFieldType(fieldProperty));
+	var fieldTypeMapped = CONST.MSG.FIELD.TYPE_MAPPING[getFieldType(fieldProperty)];
+    var fieldData = getFieldValue(this.ds, this.fileData, fieldProperty, fieldTypeMapped);
 
     return {fileName: attachData.fileName, content: fieldData};
   }
